@@ -156,6 +156,9 @@ ifndef CPUS
 CPUS := 3
 endif
 
+print-gdbport:
+	@echo $(GDBPORT)
+
 QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic
 QEMUOPTS += -global virtio-mmio.force-legacy=false
 QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
