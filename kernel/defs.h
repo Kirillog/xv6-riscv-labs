@@ -110,6 +110,13 @@ void            procdump(void);
 // swtch.S
 void            swtch(struct context*, struct context*);
 
+// lockarr.c
+void            lockarr_init();
+int             get_sleeplock();
+int             acquire_sleeplock(uint);
+int             release_sleeplock(uint);
+int             delete_sleeplock(uint);
+
 // spinlock.c
 void            acquire(struct spinlock*);
 int             holding(struct spinlock*);
