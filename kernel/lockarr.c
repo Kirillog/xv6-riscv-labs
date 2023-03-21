@@ -20,7 +20,7 @@ void lockarr_init() {
     initlock(&arr_lock, "array lock");
     for (uint i = 0; i < NLOCK; i++) {
         free_indexes[i] = i;
-        arr[i].enabled = 1;
+        arr[i].enabled = 0;
         initsleeplock(&arr[i].lock, "");
     }
 }
@@ -30,6 +30,7 @@ int get_sleeplock() {
     acquire(&arr_lock);
     if (ptr < NLOCK) {
         id = free_indexes[ptr++];
+        arr[id].enabled = 1;
     }
     else {
         id = -1;
