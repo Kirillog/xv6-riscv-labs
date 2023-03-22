@@ -36,3 +36,7 @@ entry("getpid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
+entry("get_lock");
+entry("acquire_lock");
+entry("release_lock");
+entry("delete_lock");
