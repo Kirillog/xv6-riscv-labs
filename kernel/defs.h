@@ -22,6 +22,10 @@ void            consoleinit(void);
 void            consoleintr(int);
 void            consputc(int);
 
+// dmesg.c
+void            debug_buffer_init();
+void            pr_msg(char*, ...);
+
 // exec.c
 int             exec(char*, char**);
 
