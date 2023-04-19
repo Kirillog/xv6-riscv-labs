@@ -43,6 +43,10 @@ int pr_msg(const char * str) {
     return 0;
 }
 
+void init_dmesg() {
+    initlock(&debug_buffer.lock, "debug buffer");
+}
+
 int sys_dmesg() {
     for (char *it = debug_buffer.buf; it != beg; it++)
         consputc(*it ? *it : '\n');
