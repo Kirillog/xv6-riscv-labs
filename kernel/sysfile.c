@@ -328,8 +328,15 @@ sys_open(void)
   begin_op();
 
   if(omode & O_CREATE){
-    ip = create(path, T_FILE, 0, 0);
-    if(ip == 0){
+    ip = namei(path);
+    short type = T_FILE;
+    if (ip != 0) {
+      ilock(ip);
+      type = ip->type;
+      iunlock(ip);
+    }
+    ip = create(path, type, 0, 0);
+    if(ip == 0) {
       end_op();
       return -1;
     }
@@ -339,13 +346,14 @@ sys_open(void)
       return -1;
     }
     ilock(ip);
-    if(ip->type == T_DIR && omode != O_RDONLY){
+    if(ip->type == T_DIR && (omode & ~O_NOFOLLOW) != O_RDONLY){
       iunlockput(ip);
       end_op();
       return -1;
     }
   }
   if ((ip->type == T_SYMLINK) && !(omode & O_NOFOLLOW)) {
+    printf("open: %s\n", path);
     for (int cnt = 0; cnt < SLINKFOL && ip->type == T_SYMLINK; cnt++) {
       if (readlink(ip, (uint64)path, 0) < 0) {
         iunlockput(ip);
