@@ -12,7 +12,7 @@ main(int argc, char *argv[])
   }
   if(argc == 3 && link(argv[1], argv[2]) < 0)
     fprintf(2, "link %s %s: failed\n", argv[1], argv[2]);
-  else if (argc == 4 && symlink(argv[3], argv[2]) < 0)
+  else if (argc == 4 && symlink(argv[2], argv[3]) < 0)
     fprintf(2, "link -s %s %s: failed\n", argv[2], argv[3]);
   exit(0);
 }
