@@ -312,10 +312,20 @@ static int readlink(struct inode * ip, uint64 buf, int user) {
   return 0;
 }
 
+static int parent(char * path) {
+  for (int i = strlen(path) - 1; i > 0; i--) {
+    if (path[i] == '/') {
+      return i + 1;
+    }
+  }
+  return 0;
+}
+
 uint64
 sys_open(void)
 {
   char path[MAXPATH];
+  char symlink_path[MAXPATH];
   int fd, omode;
   struct file *f;
   struct inode *ip;
@@ -353,14 +363,19 @@ sys_open(void)
     }
   }
   if ((ip->type == T_SYMLINK) && !(omode & O_NOFOLLOW)) {
-    printf("open: %s\n", path);
     for (int cnt = 0; cnt < SLINKFOL && ip->type == T_SYMLINK; cnt++) {
-      if (readlink(ip, (uint64)path, 0) < 0) {
+      if (readlink(ip, (uint64)symlink_path, 0) < 0) {
         iunlockput(ip);
         end_op();
         return -1;
       }
       iunlockput(ip);
+      int index = (symlink_path[0] == '/') ? 0 : parent(path);
+      int sym_length = strlen(symlink_path);
+      if (index + sym_length >= MAXPATH) {
+        return -1;
+      }
+      memmove(path + index, symlink_path, sym_length);
       ip = namei(path);
       if (ip == 0) {
         end_op();
