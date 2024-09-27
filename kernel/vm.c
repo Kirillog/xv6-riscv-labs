@@ -5,6 +5,8 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "spinlock.h"
+#include "proc.h"
 
 /*
  * the kernel's page table.
@@ -436,4 +438,57 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   } else {
     return -1;
   }
+}
+
+void vmprint(pagetable_t t, int depth) {
+  for (int i = 0; i < PGENUM; i++) {
+    pte_t pte = t[i];
+    if (!(pte & PTE_V)) 
+      continue;
+    uint64 child = PTE2PA(pte);
+    for (int _ = 0; _ < depth; _++)
+      printf(" ..");
+    printf("%d: pte %p pa %p", i, pte, child);
+    if ((pte & (PTE_R | PTE_W | PTE_X)) == 0) {
+      printf("\n");
+      vmprint((pagetable_t)child, depth + 1);
+    }
+    else {
+      printf(" -- ");
+      printf("%s", (PTE_V & pte) ? "Valid," : "");
+      printf("%s", (PTE_R & pte) ? "Readable," : "");
+      printf("%s", (PTE_W & pte) ? "Writeable," : "");
+      printf("%s", (PTE_X & pte) ? "Executable," : "");
+      printf("%s", (PTE_U & pte) ? "User," : "");
+      printf("%s", (PTE_G & pte) ? "Global," : "");
+      printf("%s", (PTE_A & pte) ? "Accessed," : "");
+      printf("%s", (PTE_D & pte) ? "Dirty," : "");
+      printf("\n");
+    }
+  }
+}
+
+void sys_vmprint() {
+  vmprint(myproc()->pagetable, 1);
+}
+
+void pgaccess(pagetable_t t, int* n) {
+  for (int i = 0; i < PGENUM; i++) {
+    pte_t pte = t[i];
+    if (!(pte & PTE_V))
+      continue;
+    uint64 child = PTE2PA(pte);
+    if ((pte & (PTE_R | PTE_W | PTE_X)) == 0) {
+      pgaccess((pagetable_t)child, n);
+    } else if (pte & PTE_A) {
+        ++(*n);
+        printf("%d: pte %p\n", *n, pte);
+        t[i] &= ~PTE_A;
+    }
+  }
+}
+
+void sys_pgaccess() {
+  int n = 0;
+  pgaccess(myproc()->pagetable, &n);
 }
